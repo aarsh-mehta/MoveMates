@@ -1,0 +1,24 @@
+from flask import Flask, render_template, request
+
+app = Flask(__name__)
+
+# Your other routes and configurations go here
+
+@app.route('/search-rides', methods=['POST'])
+def search_rides():
+    # Retrieve form data
+    origin = request.form.get('origin')
+    destination = request.form.get('destination')
+    date = request.form.get('date')
+
+    # Perform the search logic here (replace this with your actual search logic)
+    # For example, you might query a database for rides that match the provided criteria
+    # and return the results to display on the webpage.
+
+    # Dummy response for illustration purposes
+    search_results = [
+        {'origin': 'Example Origin', 'destination': 'Example Destination', 'date': '2023-12-01'},
+        # Add more results as needed
+    ]
+
+    return render_template('search_results.html', results=search_results)
