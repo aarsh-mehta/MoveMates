@@ -32,3 +32,51 @@ class User(db.Model):  # pragma: no cover
                 'userBio': self.user_bio,
                 'userProfileImg': self.user_profile_img,
                 'userSocialMedia': self.user_social_media}
+    
+class Trip(db.Model):  # pragma: no cover
+    """Trip information."""
+
+    __tablename__ = "trips"
+
+    trip_id = db.Column(db.Integer, autoincrement=True, primary_key=True)
+    is_active = db.Column(db.Boolean)
+    date_of_trip = db.Column(db.Date, nullable=False)
+    time = db.Column(db.String, nullable=False)
+    max_passengers = db.Column(db.Integer, nullable=False)
+    num_passengers = db.Column(db.Integer, nullable=False, default=0)
+    willing_to_stop = db.Column(db.Boolean, nullable=False)
+    trip_cost = db.Column(db.Integer, nullable=False)
+
+    # User as Driver
+    user_id = (db.Column(db.Integer,
+                         db.ForeignKey('users.user_id'),
+                         nullable=False))
+    # Places
+    origin = db.Column(db.String(64), nullable=False)
+    destination = db.Column(db.String(64), nullable=False)
+    distance_meters = db.Column(db.Integer, nullable=False)
+    display_distance = db.Column(db.String(15), nullable=False)
+
+    # Back reference to User
+    user = (db.relationship("User",
+                            backref=db.backref("trips",
+                                               order_by=trip_id)))
+
+    def to_json(self):  # pragma: no cover
+        """Serialize data."""
+        datetime_str = self.date_of_trip.strftime('%Y-%m-%d')
+
+        return {'tripId': self.trip_id,
+                'dateOfTrip': datetime_str,
+                'maxPassengers': self.max_passengers,
+                'numPassengers': self.num_passengers,
+                'willingToStop': self.willing_to_stop,
+                'tripCost': self.trip_cost,
+                'origin': self.origin,
+                'time': self.time,
+                'destination': self.destination,
+                'distanceMeters': self.distance_meters,
+                'displayDistance': self.display_distance,
+                'userAsDriver': self.user_id,
+                'userFirstName': self.user.fname,
+                'userProfileImg': self.user.user_profile_img}
