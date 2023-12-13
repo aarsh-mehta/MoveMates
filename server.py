@@ -295,3 +295,53 @@ def notify_user():
     flash('Message sent!')
     return redirect('/')
 
+@app.route('/edit-profile', methods=["GET"])
+def display_profile_edit_form():
+    """Display profile edit form."""
+    return render_template("edit_profile.html")
+
+
+@app.route('/edit-profile', methods=["POST"])
+def update_profile():
+    """Update user's profile."""
+    user_id = session.get('user_id')
+    user = User.query.filter(User.user_id == user_id).one()
+
+    if len(request.form['fname']) > 0:
+        user.fname = request.form['fname']
+
+    if len(request.form['lname']) > 0:
+        user.lname = request.form['lname']
+
+    if len(request.form['phone_number']) > 0:
+        user.phone_number = request.form['phone_number']
+
+    if len(request.form['gender']) > 0:
+        user.user_gender = request.form['gender']
+
+    if len(request.form['bio']) > 0:
+        user.user_bio = request.form['bio']
+
+    if len(request.form['profile_picture']) > 0:
+        user.user_profile_img = request.form['profile_picture']
+
+    if len(request.form['social_media']) > 0:
+        user.user_social_media = request.form['social_media']
+
+    db.session.commit()
+    flash('Profile information updated')
+    return redirect('/')
+
+
+@app.route('/logout')
+def logout():
+    """Log user out."""
+    del session['user_id']
+    flash('Logged out!')
+
+    return redirect('/')
+
+
+if __name__ == "__main__":
+    connect_to_db(app)
+    app.run(port=5000, host='0.0.0.0')
