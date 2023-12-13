@@ -80,3 +80,25 @@ class Trip(db.Model):  # pragma: no cover
                 'userAsDriver': self.user_id,
                 'userFirstName': self.user.fname,
                 'userProfileImg': self.user.user_profile_img}
+class UserTrip(db.Model):  # pragma: no cover
+    """User (passenger) has joined a trip."""
+
+    __tablename__ = "user_trips"
+
+    user_trip_id = db.Column(db.Integer, autoincrement=True, primary_key=True)
+
+    # Back reference to Trip
+    trip_id = (db.Column(db.Integer,
+                         db.ForeignKey('trips.trip_id'),
+                         nullable=False))
+    trip = (db.relationship("Trip",
+                            backref=db.backref("user_trips",
+                                               order_by=user_trip_id)))
+    # User as Passenger
+    user_id = (db.Column(db.Integer,
+                         db.ForeignKey('users.user_id'),
+                         nullable=False))
+    # Back reference to User
+    user = (db.relationship("User",
+                            backref=db.backref("user_trips",
+                                               order_by=user_trip_id)))
