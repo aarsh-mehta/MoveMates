@@ -102,3 +102,23 @@ class UserTrip(db.Model):  # pragma: no cover
     user = (db.relationship("User",
                             backref=db.backref("user_trips",
                                                order_by=user_trip_id)))
+    def to_json(self):  # pragma: no cover
+        """Serialize data."""
+        datetime_str = self.trip.date_of_trip.strftime('%Y-%m-%d')
+
+        return {'userTripId': self.user_trip_id,
+                'tripId': self.trip_id,
+                'userId': self.user_id,
+                'dateOfTrip': datetime_str,
+                'userFirstName': self.user.fname,
+                'userProfileImg': self.user.user_profile_img,
+                'userBio': self.user.user_bio,
+                'origin': self.trip.origin,
+                'time': self.trip.time,
+                'destination': self.trip.destination,
+                'displayDistance': self.trip.display_distance,
+                'distanceMeters': self.trip.distance_meters,
+                'numPassengers': self.trip.num_passengers,
+                'driverFirstName': self.trip.user.fname,
+                'driverProfileImg': self.trip.user.user_profile_img,
+                'driverBio': self.trip.user.user_bio}
