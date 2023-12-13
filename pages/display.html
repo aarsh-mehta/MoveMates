@@ -1,0 +1,22 @@
+{% extends 'base.html' %}
+
+{% block title %}Search Results{% endblock %}
+
+{% block content %}
+  <br>
+  <h3>We found these rides from {{ origin }} to {{ destination }} by {{ date_desired }} :</h3><br>
+
+  <div class="container-fluid">
+    <div class="row">
+    {% for trip in trips %}
+      <div class="card" style="width: 18rem;" align="center">
+        <div class="card-body">
+          <h3 class="card-title">
+            <img src={{ trip.user.user_profile_img }} class="rounded-circle search-img"><br>
+            {{ trip.user.fname }}
+          </h3>
+          <h6 class="card-subtitle mb-2 text-muted">
+            {{ trip.user.user_bio }}
+          </h6>
+          <p class="card-text">
+          
