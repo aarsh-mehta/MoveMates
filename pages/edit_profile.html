@@ -1,0 +1,33 @@
+{% extends 'master.html' %}
+
+{% block title %}Edit Profile{% endblock %}
+
+{% block content %}
+
+<br><br>
+<h3>Update personal information</h3>
+
+<div>
+    <form action="/edit-profile" method="post">
+        <div class="form-row">
+        <div class="col">
+            <input type="text" class="form-control" placeholder="First name" name="fname">
+        </div>
+        <div class="col">
+            <input type="text" class="form-control" placeholder="Last name" name="lname">
+        </div>
+        </div>
+        <br>
+        <div class="form-row">
+            <div class="col">
+            <select class="custom-select mr-sm-2" id="inlineFormCustomSelect" name="gender">
+                <option selected>Gender</option>
+                <option value="Female">Female</option>
+                <option value="Non-Binary">Non-binary</option>
+                <option value="Male">Male</option>
+            </select>
+            </div>
+            <div class="col">
+                <input type="text" class="form-control" placeholder="Phone Number" name="phone_number">
+            </div>
+        </div>
