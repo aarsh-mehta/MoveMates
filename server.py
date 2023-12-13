@@ -188,3 +188,110 @@ def add_trip_process():
     db.session.commit()
 
     return redirect('/')
+@app.route('/search-rides')
+def search_rides_form():
+    """Display search ride form."""
+    user_id = session.get('user_id')
+
+    if user_id:
+        return render_template('search_form.html', key=googlePlaceKey)
+    else:
+        flash("You need to be logged in to do that.")
+        return redirect('/')
+
+
+@app.route('/search-rides', methods=["POST"])
+def search_rides():
+    """Display search rides results."""
+    origin = request.form['origin']
+    destination = request.form['destination']
+    date_desired = request.form['date']
+    date_obj = datetime.strptime(date_desired, "%m/%d/%Y").date()
+    today = date.today()
+    destination_list = destination.split(',')
+    destination_city = destination_list[0]
+    origin_list = origin.split(',')
+    origin_city = origin_list[0]
+
+    # Query for origin and destination, if none, then nearby trips
+    trips = Trip.query.filter(Trip.origin == origin,
+                              Trip.destination == destination,
+                              Trip.date_of_trip >= today).all()
+
+    if not trips:
+        # Query trips from origin
+        trips_by_origin = Trip.query.filter(Trip.origin == origin,
+                                            Trip.date_of_trip >= today).all()
+
+        if not trips_by_origin:
+            flash(('Sorry, no rides were found.'
+                   'Would you like to try another search?'))
+            return redirect('/search-rides')
+
+        else:
+            possible_destinations = ([trip.destination
+                                      for trip in trips_by_origin])
+            drop_offs_nearby = (distance_matrix_filter.distance_matrix_filter(
+                                destination,
+                                possible_destinations,
+                                trips_by_origin))
+
+            if not drop_offs_nearby:
+                flash(('Sorry, no rides were found.'
+                       'Would you like to try another search?'))
+                return redirect('/search-rides')
+            else:
+                return render_template('nearby_search_results.html',
+                                       origin=origin,
+                                       destination=destination_city,
+                                       date=date,
+                                       date_desired=date_desired,
+                                       date_obj=date_obj,
+                                       drop_offs_nearby=drop_offs_nearby)
+    else:
+        return render_template('search_results.html',
+                               trips=trips,
+                               origin=origin_city,
+                               destination=destination_city,
+                               date_desired=date_desired,
+                               date=date,
+                               date_obj=date_obj)
+
+
+@app.route('/join-ride', methods=["POST"])
+def create_user_trip():
+    """Add user to ride in the database."""
+    trip_id = request.form['trip']
+    user_id = session.get('user_id')
+
+    trip = Trip.query.filter(Trip.trip_id == trip_id).one()
+
+    # Ensure there is still space before adding to current passengers
+    if trip.num_passengers < trip.max_passengers:
+
+        trip.num_passengers += 1
+
+        new_user_trip = UserTrip(trip_id=trip_id,
+                                 user_id=user_id)
+
+        db.session.add(new_user_trip)
+        db.session.commit()
+
+        flash("Ride joined!")
+        return redirect('/')
+    else:
+        flash("Sorry, ride is already full!")
+        return redirect('/')
+
+
+@app.route('/notify', methods=["POST"])
+def notify_user():
+    """Send text message to passenger/driver with Twilio API."""
+    client = Client(twilioSID, twilioAuthKey)
+    msg = request.form.get('message')
+
+    client.messages.create(to=myNum, from_=twilioNum, body=msg)
+
+    flash('Message sent!')
+    return redirect('/')
+
