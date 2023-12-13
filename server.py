@@ -32,3 +32,65 @@ app.jinja_env.undefined = StrictUndefined
 UPLOAD_FOLDER = '/static/img'
 ALLOWED_EXTENSIONS = set(['png', 'jpg', 'jpeg','webp'])
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
+@app.context_processor
+def inject_user():
+    """Pass in user information."""
+    user_id = session.get('user_id')
+
+    user_info = User.query.filter(User.user_id == user_id).first()
+    return dict(user_info=user_info)
+
+
+@app.route('/')
+def index():
+    """Display Homepage."""
+    user_id = session.get('user_id')
+
+    user_info = User.query.filter(User.user_id == user_id).first()
+
+    if user_id:
+        return render_template('homepage.html', user_info=user_info)
+    else:
+        return render_template('index.html')
+
+@app.route('/home')
+def home():
+    return render_template('homepage.html')
+
+@app.route('/trips.json')
+def trips():
+    """Return trips where user is a driver or passenger."""
+    user_id = session.get('user_id')
+
+    if user_id:
+        # Query all of the trips where the user is the driver
+        trips = Trip.query.filter(Trip.user_id == user_id).all()
+
+        trips_dict_list = []
+        trips_by_date = {}
+
+        for trip in trips:
+            trip_json = trip.to_json()
+            trips_dict_list.append(trip_json)
+
+            passengers = (UserTrip.query.filter(UserTrip.trip_id ==
+                                                trip_json["tripId"]).all())
+            trip_json["passengers"] = ([passenger.to_json()
+                                        for passenger in passengers])
+
+        trips_as_passenger = UserTrip.query.filter(UserTrip.user_id ==
+                                                   user_id).all()
+        trips_pass_dict = [trip.to_json() for trip in trips_as_passenger]
+
+        for trip in trips_pass_dict:
+            trips_by_date[trip['dateOfTrip']] = trip
+
+        for trip in trips_dict_list:
+            trips_by_date[trip['dateOfTrip']] = trip
+
+        return jsonify({'trips': trips_dict_list,
+                        'tripsAsPassenger': trips_pass_dict,
+                        'tripsByDate': trips_by_date})
+    else:
+        flash("Oops! You need to log in.")
+        return jsonify({'status': 'You"re not logged in'})
