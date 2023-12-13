@@ -94,3 +94,97 @@ def trips():
     else:
         flash("Oops! You need to log in.")
         return jsonify({'status': 'You"re not logged in'})
+    @app.route('/register', methods=["POST"])
+def register_user():
+    """Register user."""
+    email = request.form['email']
+    password = request.form['password']
+
+    b = password.encode("utf-8")
+
+    # When registering, this hashes password
+    hashed_pw = bcrypt.hashpw(b, bcrypt.gensalt())
+
+    new_user = User(email=email,
+                    password=hashed_pw.decode("utf-8"))
+
+    db.session.add(new_user)
+    db.session.commit()
+
+    flash('Registration completed--log in now')
+    return redirect('/')
+
+
+@app.route('/login', methods=["POST"])
+def log_user_in():
+    """Log the user in."""
+    email = request.form['email']
+    password = request.form['password']
+
+    user_by_email = User.query.filter(User.email == email).first()
+
+    # If email is not found in db
+    if user_by_email is None:
+        flash('Oops! You need to register first.')
+    # If email is found in db
+    elif user_by_email is not None:
+        user_id = user_by_email.user_id
+        user_password = user_by_email.password
+
+        is_password_match = (bcrypt.checkpw(password.encode("utf-8"),
+                                            user_password.encode("utf-8")))
+
+        # Verify password is correct
+        if is_password_match is False:
+            flash("Incorrect password.")
+
+        elif email == user_by_email.email and is_password_match:
+            session['user_id'] = user_id
+            flash('Logged in successfully')
+
+    return redirect('/')
+
+
+@app.route('/add-ride')
+def add_trip():
+    """Add ride to the rides table."""
+    user_id = session.get('user_id')
+
+    if user_id:
+        return render_template('add_ride.html', key=googlePlaceKey)
+    else:
+        flash("You need to be logged in to do that.")
+        return redirect('/')
+
+
+@app.route('/add-ride', methods=["POST"])
+def add_trip_process():
+    """Add a trip to the database."""
+    trip_date = request.form['date']
+    trip_time = request.form['time']
+    trip_origin = request.form['origin']
+    trip_destination = request.form['destination']
+    max_passengers = request.form['max_passengers']
+    trip_cost = request.form['cost']
+    willing_to_stop = request.form['newleg'] in ('True')
+    user_id = session.get('user_id')
+    '''distance_meters, display_distance = (distance_matrix.distance_matrix(
+                                         trip_origin,
+                                         trip_destination))
+    ''' 
+    new_trip = Trip(date_of_trip=trip_date,
+                    time=trip_time,
+                    max_passengers=max_passengers,
+                    origin=trip_origin,
+                    destination=trip_destination,
+                    willing_to_stop=willing_to_stop,
+                    trip_cost=trip_cost,
+                    user_id=user_id,
+                    distance_meters=5000,
+                    display_distance=10,
+                    is_active=True)
+
+    db.session.add(new_trip)
+    db.session.commit()
+
+    return redirect('/')
